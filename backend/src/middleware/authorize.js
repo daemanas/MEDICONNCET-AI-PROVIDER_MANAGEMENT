@@ -16,6 +16,9 @@ export async function resolveFacilityContext(req, res, next) {
       req.facilityId = req.query.facilityId || req.body.facilityId || undefined;
       return next();
     }
+    if (req.user.role === ROLES.PATIENT) {
+      return next();
+    }
     if (isFacilityScopedRole(req.user.role)) {
       req.facilityId = req.user.facilityId;
       if (!req.facilityId) throw new AppError("No facility is linked to this account.", 403, "NO_FACILITY");

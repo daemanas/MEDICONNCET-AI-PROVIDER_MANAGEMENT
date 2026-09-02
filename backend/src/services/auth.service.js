@@ -71,7 +71,7 @@ export async function loginWithPassword(req, res, { email, password }) {
   user.refreshTokenHash = sha256(refresh);
   await user.save();
   await writeAudit(req, { action: "LOGIN", resource: "User", resourceId: user._id, facilityId: user.facilityId });
-  return { user: publicUser(user), accessToken: access };
+  return { user: publicUser(user), accessToken: access, refreshToken: refresh };
 }
 
 export async function requestOtp(email, purpose = "LOGIN") {
@@ -124,11 +124,11 @@ export async function loginWithOtp(req, res, { email, code }) {
   user.refreshTokenHash = sha256(refresh);
   await user.save();
   await writeAudit(req, { action: "LOGIN", resource: "User", resourceId: user._id, metadata: { method: "OTP" } });
-  return { user: publicUser(user), accessToken: access };
+  return { user: publicUser(user), accessToken: access, refreshToken: refresh };
 }
 
 export async function refreshSession(req, res) {
-  const token = req.cookies?.mc_refresh;
+  const token = req.body?.refreshToken || req.cookies?.mc_refresh;
   if (!token) throw new AppError("Your session has expired. Please sign in again.", 401, "SESSION_EXPIRED");
   let decoded;
   try {
@@ -145,7 +145,7 @@ export async function refreshSession(req, res) {
   res.cookie("mc_refresh", refresh, cookieOptions(REFRESH_MS));
   user.refreshTokenHash = sha256(refresh);
   await user.save();
-  return { user: publicUser(user), accessToken: access };
+  return { user: publicUser(user), accessToken: access, refreshToken: refresh };
 }
 
 export async function logout(req, res) {

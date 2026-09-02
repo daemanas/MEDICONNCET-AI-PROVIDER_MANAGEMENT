@@ -10,7 +10,16 @@ export const env = {
   isProd: process.env.NODE_ENV === "production",
   port: Number(process.env.PORT || 5000),
   clientUrl: process.env.CLIENT_URL || "http://localhost:5173",
+  corsOrigins: String(process.env.CORS_ORIGINS || "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean),
   mongoUri: process.env.MONGO_URI || "mongodb://127.0.0.1:27017/mediconnect_ai",
+  aiApiUrl: process.env.AI_API_URL || "",
+  aiApiKey: process.env.AI_API_KEY || "",
+  mapsApiKey: process.env.MAPS_API_KEY || "",
+  voiceApiUrl: process.env.VOICE_API_URL || "",
+  voiceApiKey: process.env.VOICE_API_KEY || "",
   jwtAccessSecret: process.env.JWT_ACCESS_SECRET || "dev-access-secret",
   jwtRefreshSecret: process.env.JWT_REFRESH_SECRET || "dev-refresh-secret",
   jwtAccessExpires: process.env.JWT_ACCESS_EXPIRES || "15m",

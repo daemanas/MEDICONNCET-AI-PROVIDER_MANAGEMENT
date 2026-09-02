@@ -27,5 +27,8 @@ router.get("/procurement", ...ops, procurementController.pharmacyList);
 router.get("/procurement/:id", ...ops, procurementController.pharmacyOne);
 router.post("/procurement/:id/respond", ...ops, procurementController.pharmacyRespond);
 router.patch("/procurement/:id/status", ...ops, procurementController.pharmacyAdvance);
+router.get("/patient-orders", ...ops, pharmacyController.listPatientAppOrders);
+router.get("/patient-orders/:id", ...ops, pharmacyController.patientAppOrderOne);
+router.patch("/patient-orders/:id/status", ...ops, pharmacyController.advancePatientAppOrder);
 
 export default router;

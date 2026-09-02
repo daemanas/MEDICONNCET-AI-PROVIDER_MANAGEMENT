@@ -69,7 +69,10 @@ const facilitySchema = new mongoose.Schema(
 );
 
 facilitySchema.index({ district: 1, status: 1 });
+facilitySchema.index({ city: 1, status: 1 });
 facilitySchema.index({ type: 1, status: 1 });
+facilitySchema.index({ "geo.lat": 1, "geo.lng": 1 });
 facilitySchema.index({ name: "text" });
+facilitySchema.index({ updatedAt: 1, district: 1, status: 1 });
 
 export const Facility = mongoose.model("Facility", facilitySchema);

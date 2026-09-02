@@ -16,6 +16,7 @@ import miscRoutes from "./routes/misc.routes.js";
 import diagnosticRoutes from "./routes/diagnostic.routes.js";
 import pharmacyRoutes from "./routes/pharmacy.routes.js";
 import procurementRoutes from "./routes/procurement.routes.js";
+import mobileRoutes from "./routes/mobile.routes.js";
 
 export function createApp() {
   const app = express();
@@ -23,7 +24,12 @@ export function createApp() {
   app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
   app.use(
     cors({
-      origin: env.clientUrl,
+      origin(origin, callback) {
+        if (!origin) return callback(null, true);
+        const allowed = new Set([env.clientUrl, ...env.corsOrigins]);
+        if (allowed.has(origin) || !env.isProd) return callback(null, true);
+        return callback(new Error("Not allowed by CORS"));
+      },
       credentials: true,
     })
   );
@@ -43,6 +49,7 @@ export function createApp() {
   app.use("/api/procurement", procurementRoutes);
   app.use("/api/settings", settingsRoutes);
   app.use("/api", miscRoutes);
+  app.use("/api/mobile", mobileRoutes);
 
   app.use(notFound);
   app.use(errorHandler);

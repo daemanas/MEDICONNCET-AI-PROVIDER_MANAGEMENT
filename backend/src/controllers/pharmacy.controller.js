@@ -357,4 +357,24 @@ export const pharmacyController = {
       recent,
     });
   }),
+
+  listPatientAppOrders: asyncHandler(async (req, res) => {
+    const { listPharmacyPatientOrders } = await import("../services/mobileOrders.service.js");
+    const orders = await listPharmacyPatientOrders(req.facilityId, req.query.bucket);
+    res.json({ orders });
+  }),
+
+  patientAppOrderOne: asyncHandler(async (req, res) => {
+    const { PatientMedicineOrder } = await import("../models/index.js");
+    const order = await PatientMedicineOrder.findOne({ _id: req.params.id, pharmacyFacilityId: req.facilityId });
+    if (!order) throw new AppError("Order not found.", 404, "NOT_FOUND");
+    res.json({ order });
+  }),
+
+  advancePatientAppOrder: asyncHandler(async (req, res) => {
+    const { advancePharmacyPatientOrder } = await import("../services/mobileOrders.service.js");
+    const status = String(req.body.status || "").toUpperCase();
+    const order = await advancePharmacyPatientOrder(req, req.facilityId, req.params.id, status, req.body.note);
+    res.json({ order, message: "Order updated." });
+  }),
 };

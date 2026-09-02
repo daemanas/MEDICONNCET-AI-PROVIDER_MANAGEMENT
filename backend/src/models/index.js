@@ -26,3 +26,7 @@ export * from "./MedicineItem.js";
 export * from "./PharmacyFulfillment.js";
 export * from "./MedicineRequest.js";
 export * from "./PharmacyAreaRequest.js";
+export * from "./PatientMedicineOrder.js";
+export * from "./Conversation.js";
+export * from "./ChatMessage.js";
+export * from "./HealthTip.js";
