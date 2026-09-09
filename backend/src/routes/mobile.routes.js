@@ -3,6 +3,7 @@ import { authenticate } from "../middleware/authenticate.js";
 import { requirePatient } from "../middleware/requirePatient.js";
 import { authLimiter, apiLimiter } from "../middleware/rateLimiter.js";
 import { mobileController } from "../controllers/mobile.controller.js";
+import mobileExtrasRoutes from "./mobileExtras.routes.js";
 
 const patient = [authenticate, requirePatient];
 const router = Router();
@@ -48,5 +49,11 @@ router.get("/conversations/:id/messages", ...patient, mobileController.messages)
 router.post("/conversations/:id/messages", ...patient, mobileController.sendMessage);
 
 router.post("/ai", ...patient, apiLimiter, mobileController.ai);
+
+// Routes added for the patient mobile app: lab bookings, health metrics,
+// reminders, wallet, family, reviews, AI history, emergency, appointment
+// cancel/reschedule and document downloads. Mounted last so the routes
+// above always win.
+router.use(mobileExtrasRoutes);
 
 export default router;

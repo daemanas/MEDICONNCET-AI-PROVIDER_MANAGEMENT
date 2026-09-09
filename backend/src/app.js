@@ -17,6 +17,7 @@ import diagnosticRoutes from "./routes/diagnostic.routes.js";
 import pharmacyRoutes from "./routes/pharmacy.routes.js";
 import procurementRoutes from "./routes/procurement.routes.js";
 import mobileRoutes from "./routes/mobile.routes.js";
+import aiRoutes from "./routes/ai.routes.js";
 
 export function createApp() {
   const app = express();
@@ -50,6 +51,7 @@ export function createApp() {
   app.use("/api/settings", settingsRoutes);
   app.use("/api", miscRoutes);
   app.use("/api/mobile", mobileRoutes);
+  app.use("/api/ai", aiRoutes);
 
   app.use(notFound);
   app.use(errorHandler);

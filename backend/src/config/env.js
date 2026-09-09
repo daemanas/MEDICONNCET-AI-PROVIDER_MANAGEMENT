@@ -20,6 +20,24 @@ export const env = {
   mapsApiKey: process.env.MAPS_API_KEY || "",
   voiceApiUrl: process.env.VOICE_API_URL || "",
   voiceApiKey: process.env.VOICE_API_KEY || "",
+  // Python triage/risk microservice (D:\curser\ai-model). Kept separate from
+  // aiApiUrl above, which mobileAi.service.js already uses for the chat
+  // navigator's LLM call - they are different services with different auth.
+  ai: {
+    baseUrl: String(process.env.AI_TRIAGE_API_URL || "").replace(/\/+$/, ""),
+    serviceKey: process.env.AI_TRIAGE_API_KEY || "",
+    timeoutMs: Number(process.env.AI_TRIAGE_TIMEOUT_MS || 15000),
+    voiceTimeoutMs: Number(process.env.AI_VOICE_TIMEOUT_MS || 60000),
+    cacheTtlSeconds: Number(process.env.AI_TRIAGE_CACHE_TTL || 300),
+    maxQueued: Number(process.env.AI_QUEUE_MAX || 500),
+    maxVoiceBytes: Number(process.env.AI_VOICE_MAX_BYTES || 10 * 1024 * 1024),
+    // Lets the scheduled re-scoring job call this backend without a user JWT.
+    cronKey: process.env.AI_CRON_KEY || "",
+  },
+  redis: {
+    url: process.env.REDIS_URL || "",
+    connectTimeoutMs: Number(process.env.REDIS_CONNECT_TIMEOUT_MS || 2000),
+  },
   jwtAccessSecret: process.env.JWT_ACCESS_SECRET || "dev-access-secret",
   jwtRefreshSecret: process.env.JWT_REFRESH_SECRET || "dev-refresh-secret",
   jwtAccessExpires: process.env.JWT_ACCESS_EXPIRES || "15m",

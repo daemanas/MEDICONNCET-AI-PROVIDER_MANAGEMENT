@@ -37,6 +37,10 @@ const labOrderSchema = new mongoose.Schema(
     status: { type: String, enum: Object.values(LAB_ORDER_STATUS), default: LAB_ORDER_STATUS.REQUESTED },
     requestedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     referredFromFacilityId: { type: mongoose.Schema.Types.ObjectId, ref: "Facility" },
+    // Set when the patient self-books a slot from the app. Staff-created orders
+    // leave it empty, which is why it is optional rather than required.
+    scheduledAt: Date,
+    collectionAddress: String,
     sampleCollectedAt: Date,
     processedAt: Date,
     reportReadyAt: Date,
@@ -53,5 +57,6 @@ const labOrderSchema = new mongoose.Schema(
 
 labOrderSchema.index({ facilityId: 1, createdAt: -1 });
 labOrderSchema.index({ facilityId: 1, status: 1 });
+labOrderSchema.index({ patientId: 1, scheduledAt: -1 });
 
 export const LabOrder = mongoose.model("LabOrder", labOrderSchema);
