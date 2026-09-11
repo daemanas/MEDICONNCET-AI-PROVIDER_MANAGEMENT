@@ -1,4 +1,14 @@
-const API = "";
+// export const API_BASE_URL = (
+//   import.meta.env.VITE_API_BASE_URL ||
+//   import.meta.env.API_BASE_URL ||
+//   ""
+// ).replace(/\/+$/, "");
+
+// const API = API_BASE_URL;
+
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
+
+const API = API_BASE_URL;
 
 export const DATA_CHANGED = "mc:data-changed";
 const DATA_CHANNEL = "mc-data";
@@ -50,6 +60,7 @@ const SKIP_REFRESH = new Set([
   "/api/auth/otp/login",
   "/api/auth/forgot-password",
   "/api/auth/reset-password",
+  "/api/auth/logout",
 ]);
 
 function shouldRefresh(path) {
@@ -96,11 +107,7 @@ export async function api(path, { method = "GET", body, facilityId, headers, _re
 }
 
 export async function restoreSession() {
-  const refreshed = await tryRefresh();
-  if (!refreshed?.ok) {
-    throw new ApiError("Authentication required.", 401, "UNAUTHENTICATED");
-  }
-  return api("/api/auth/me", { _retry: true });
+  return await api("/api/auth/me");
 }
 
 export async function downloadBinary(path, { facilityId, filename = "download.pdf" } = {}) {

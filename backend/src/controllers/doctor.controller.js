@@ -65,9 +65,7 @@ export const doctorController = {
 
   activate: asyncHandler(async (req, res) => {
     const { user } = await activateDoctorAccount(req.body);
-    const refresh = signRefreshToken({ sub: String(user._id), role: user.role, facilityId: null });
-    setAuthCookies(res, user);
-    res.cookie("mc_refresh", refresh, cookieOptions(7 * 24 * 60 * 60 * 1000));
+    const { access, refresh } = setAuthCookies(res, user);
     user.refreshTokenHash = sha256(refresh);
     await user.save();
     const preview = await openInvitation(req.body.token);

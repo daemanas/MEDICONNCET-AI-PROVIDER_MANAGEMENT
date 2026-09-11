@@ -23,7 +23,7 @@ export default function LoginPage() {
     setError("");
     try {
       const data = await api("/api/auth/login", { method: "POST", body: { email, password } });
-      setSession(data);
+      await setSession(data);
       toast("Signed in securely.");
       navigate("/app");
     } catch (err) {
@@ -54,7 +54,7 @@ export default function LoginPage() {
     setError("");
     try {
       const data = await api("/api/auth/otp/login", { method: "POST", body: { email, code: otp } });
-      setSession(data);
+      await setSession(data);
       navigate("/app");
     } catch (err) {
       setError(err.message);

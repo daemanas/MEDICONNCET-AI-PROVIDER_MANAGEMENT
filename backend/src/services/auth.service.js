@@ -2,6 +2,7 @@ import { env } from "../config/env.js";
 import { OtpChallenge, User } from "../models/index.js";
 import { AppError } from "../utils/errors.js";
 import {
+  clearCookieOptions,
   comparePassword,
   cookieOptions,
   generateOtp,
@@ -29,7 +30,7 @@ export function setAuthCookies(res, user) {
   const refresh = signRefreshToken(tokenPayload(user));
   res.cookie("mc_access", access, cookieOptions(ACCESS_MS));
   res.cookie("mc_refresh", refresh, cookieOptions(REFRESH_MS));
-  return { access };
+  return { access, refresh };
 }
 
 export async function persistRefresh(user, refreshToken) {
@@ -66,9 +67,7 @@ export async function loginWithPassword(req, res, { email, password }) {
   user.failedLogins = 0;
   user.lockUntil = undefined;
   user.lastLoginAt = new Date();
-  const { access } = setAuthCookies(res, user);
-  const refresh = signRefreshToken(tokenPayload(user));
-  res.cookie("mc_refresh", refresh, cookieOptions(REFRESH_MS));
+  const { access, refresh } = setAuthCookies(res, user);
   user.refreshTokenHash = sha256(refresh);
   await user.save();
   await writeAudit(req, { action: "LOGIN", resource: "User", resourceId: user._id, facilityId: user.facilityId });
@@ -135,9 +134,7 @@ export async function loginWithOtp(req, res, { email, code }) {
     throw new AppError("This account is not permitted to sign in.", 403, "ACCOUNT_DISABLED");
   }
   user.lastLoginAt = new Date();
-  const refresh = signRefreshToken(tokenPayload(user));
-  const { access } = setAuthCookies(res, user);
-  res.cookie("mc_refresh", refresh, cookieOptions(REFRESH_MS));
+  const { access, refresh } = setAuthCookies(res, user);
   user.refreshTokenHash = sha256(refresh);
   await user.save();
   await writeAudit(req, { action: "LOGIN", resource: "User", resourceId: user._id, metadata: { method: "OTP" } });
@@ -157,9 +154,7 @@ export async function refreshSession(req, res) {
   if (!user || user.refreshTokenHash !== sha256(token)) {
     throw new AppError("Your session has expired. Please sign in again.", 401, "SESSION_EXPIRED");
   }
-  const refresh = signRefreshToken(tokenPayload(user));
-  const { access } = setAuthCookies(res, user);
-  res.cookie("mc_refresh", refresh, cookieOptions(REFRESH_MS));
+  const { access, refresh } = setAuthCookies(res, user);
   user.refreshTokenHash = sha256(refresh);
   await user.save();
   return { user: publicUser(user), accessToken: access, refreshToken: refresh };
@@ -170,8 +165,8 @@ export async function logout(req, res) {
     await User.findByIdAndUpdate(req.user._id, { $unset: { refreshTokenHash: 1 } });
     await writeAudit(req, { action: "LOGOUT", resource: "User", resourceId: req.user._id });
   }
-  res.clearCookie("mc_access", { path: "/" });
-  res.clearCookie("mc_refresh", { path: "/" });
+  res.clearCookie("mc_access", clearCookieOptions());
+  res.clearCookie("mc_refresh", clearCookieOptions());
 }
 
 export async function requestPasswordReset(email) {

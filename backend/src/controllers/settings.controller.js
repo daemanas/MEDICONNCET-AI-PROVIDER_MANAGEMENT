@@ -171,13 +171,7 @@ export const settingsController = {
     req.user.passwordHash = await hashPassword(newPassword);
     req.user.failedLogins = 0;
     req.user.lockUntil = undefined;
-    const refresh = signRefreshToken({
-      sub: String(req.user._id),
-      role: req.user.role,
-      facilityId: req.user.facilityId ? String(req.user.facilityId) : null,
-    });
-    setAuthCookies(res, req.user);
-    res.cookie("mc_refresh", refresh, cookieOptions(7 * 24 * 60 * 60 * 1000));
+    const { access, refresh } = setAuthCookies(res, req.user);
     req.user.refreshTokenHash = sha256(refresh);
     await req.user.save();
     await writeAudit(req, { action: "PASSWORD_CHANGE", resource: "User", resourceId: req.user._id });

@@ -52,10 +52,10 @@ export function AuthProvider({ children }) {
       facilityId,
       setFacilityId,
       loading,
-      setSession: (payload) => {
+      setSession: async (payload) => {
         setUser(payload.user);
         setLoading(false);
-        loadMe();
+        await loadMe();
       },
       applyUser: (next) => setUser((prev) => ({ ...prev, ...next })),
       applyFacility: (facility) => {

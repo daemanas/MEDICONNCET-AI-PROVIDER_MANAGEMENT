@@ -48,3 +48,12 @@ export function cookieOptions(maxAgeMs) {
     maxAge: maxAgeMs,
   };
 }
+
+export function clearCookieOptions() {
+  return {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: env.isProd,
+    path: "/",
+  };
+}

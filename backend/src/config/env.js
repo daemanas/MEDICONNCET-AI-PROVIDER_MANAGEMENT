@@ -9,11 +9,15 @@ export const env = {
   node: process.env.NODE_ENV || "development",
   isProd: process.env.NODE_ENV === "production",
   port: Number(process.env.PORT || 5000),
-  clientUrl: process.env.CLIENT_URL || "http://localhost:5173",
-  corsOrigins: String(process.env.CORS_ORIGINS || "")
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean),
+  clientUrl: process.env.CLIENT_URL || "http://127.0.0.1:5173",
+  corsOrigins: [
+    process.env.CLIENT_URL,
+    "http://127.0.0.1:5173",
+    "http://localhost:5173",
+    ...(process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(",") : []),
+  ]
+    .filter(Boolean)
+    .map((s) => s.trim()),
   mongoUri: process.env.MONGO_URI || "mongodb://127.0.0.1:27017/mediconnect_ai",
   aiApiUrl: process.env.AI_API_URL || "",
   aiApiKey: process.env.AI_API_KEY || "",
