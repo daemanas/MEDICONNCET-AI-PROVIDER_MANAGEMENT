@@ -27,7 +27,13 @@ export const authController = {
     res.json(data);
   }),
   requestOtp: asyncHandler(async (req, res) => {
-    await requestOtp(req.body.email.toLowerCase(), "LOGIN");
+    const raw = req.body?.email;
+    // Validate email format before attempting to send.
+    const parsed = z.string().email().safeParse(String(raw || "").toLowerCase().trim());
+    if (!parsed.success) {
+      return res.status(422).json({ error: "A valid email address is required.", code: "EMAIL_INVALID" });
+    }
+    await requestOtp(parsed.data, "LOGIN");
     res.json({ message: "If an account exists, a verification code was sent." });
   }),
   loginOtp: asyncHandler(async (req, res) => {

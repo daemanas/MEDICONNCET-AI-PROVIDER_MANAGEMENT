@@ -56,10 +56,12 @@ export async function requestPatientOtp(phone) {
     codeHash: sha256(code),
     expiresAt: new Date(Date.now() + env.otpMinutes * 60 * 1000),
   });
-  console.log(`\n[sms:dev] Patient OTP for ${n} → ${code}\n`);
-  const payload = { sent: true, message: "A verification code was sent to your phone." };
-  if (!env.isProd) payload.debugOtp = code;
-  return payload;
+  // OTP is never logged or returned — deliver silently. For phone-based
+  // patient login the code is stored (hashed) in OtpChallenge and verified
+  // on the /verify endpoint. Log only a sanitised confirmation.
+  const maskedPhone = String(n).slice(0, -4).replace(/\d/g, "*") + String(n).slice(-4);
+  console.log(`[otp] Patient OTP requested for ${maskedPhone}`);
+  return { sent: true, message: "A verification code was sent to your phone." };
 }
 
 export async function verifyPatientOtp(req, res, { phone, code, name }) {

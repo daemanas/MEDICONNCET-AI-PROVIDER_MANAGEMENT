@@ -1,14 +1,14 @@
 import { Router } from "express";
 import { authenticate } from "../middleware/authenticate.js";
 import { requirePatient } from "../middleware/requirePatient.js";
-import { authLimiter, apiLimiter } from "../middleware/rateLimiter.js";
+import { authLimiter, apiLimiter, otpRequestLimiter } from "../middleware/rateLimiter.js";
 import { mobileController } from "../controllers/mobile.controller.js";
 import mobileExtrasRoutes from "./mobileExtras.routes.js";
 
 const patient = [authenticate, requirePatient];
 const router = Router();
 
-router.post("/auth/otp/request", authLimiter, mobileController.requestOtp);
+router.post("/auth/otp/request", otpRequestLimiter, mobileController.requestOtp);
 router.post("/auth/otp/verify", authLimiter, mobileController.verifyOtp);
 router.post("/auth/refresh", authLimiter, mobileController.refresh);
 router.post("/auth/logout", authenticate, mobileController.logout);

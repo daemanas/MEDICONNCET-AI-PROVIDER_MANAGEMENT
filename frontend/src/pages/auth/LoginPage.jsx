@@ -40,7 +40,7 @@ export default function LoginPage() {
     try {
       await api("/api/auth/otp/request", { method: "POST", body: { email } });
       setSent(true);
-      toast("If the account exists, a code was emailed (also logged in the API console).");
+      toast("If the account exists, a verification code was sent to your email.");
     } catch (err) {
       setError(err.message);
     } finally {

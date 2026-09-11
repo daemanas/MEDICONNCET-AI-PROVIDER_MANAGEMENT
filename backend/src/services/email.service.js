@@ -38,13 +38,31 @@ function getTransport() {
   return transporter;
 }
 
+// Verify SMTP connection once at startup (non-blocking). Never logs credentials.
+export function verifySMTPConnection() {
+  const transport = getTransport();
+  if (!transport) {
+    console.log("[email] No SMTP configured — using development outbox fallback.");
+    return;
+  }
+  transport.verify((err) => {
+    if (err) {
+      const safe = String(err.message || "unknown").replace(/password[^\s]*/gi, "[redacted]");
+      console.error("[email] SMTP connection failed:", safe);
+    } else {
+      console.log("[email] SMTP transporter verified successfully.");
+    }
+  });
+}
+
 export async function sendMail({ to, subject, html, text, meta }) {
   const payload = { from: env.email.from, to, subject, html, text };
   rememberOutboundEmail({ to, subject, text, meta });
   const transport = getTransport();
   if (!transport) {
-    console.log("\n[email:dev]", subject, "→", to);
-    if (text) console.log(text);
+    // Development fallback — subject is logged but email body/OTP value is NOT.
+    const maskedTo = String(to).replace(/^(.)(.*)(@.*)$/, (_, a, b, c) => a + b.replace(/./g, "*") + c);
+    console.log(`[email:dev] Would send "${subject}" to ${maskedTo}`);
     return { queued: false, stored: true };
   }
   await transport.sendMail(payload);
@@ -92,13 +110,27 @@ export async function sendDoctorInvitation({ to, facilityName, doctorName, link,
 }
 
 export async function sendOtpEmail(to, code, purpose) {
-  return sendMail({
+  // SECURITY: Subject does NOT include the OTP value to reduce exposure
+  // via mobile notification previews and email subject indexing.
+  const maskedTo = String(to).replace(/^(.)(.*)(@.*)$/, (_, a, b, c) => a + b.replace(/./g, "*") + c);
+  const result = await sendMail({
     to,
-    subject: `Your MediConnect verification code: ${code}`,
-    html: wrap("One-time code", `<p>Your verification code is:</p><p style="font-size:28px;letter-spacing:0.2em;font-weight:700;">${code}</p><p>It expires in ${env.otpMinutes} minutes. Do not share this code.</p>`),
-    text: `OTP ${code} for ${purpose}. Expires in ${env.otpMinutes} minutes.`,
+    subject: "Your MediConnect verification code",
+    html: wrap(
+      "One-time verification code",
+      `<p>Hello,</p>
+       <p>Your MediConnect verification code is:</p>
+       <p style="font-size:36px;letter-spacing:0.25em;font-weight:700;color:#0b3d4a;margin:20px 0;padding:16px 24px;background:#f0f8f6;border-radius:10px;display:inline-block;">${code}</p>
+       <p>This code expires in <strong>${env.otpMinutes} minutes</strong>. Do not share this code with anyone.</p>
+       <p style="color:#6b7c80;font-size:13px;">If you did not request this code, you can safely ignore this email.</p>
+       <p>Regards,<br>MediConnect</p>`
+    ),
+    text: `Your MediConnect verification code is: ${code}\n\nThis code expires in ${env.otpMinutes} minutes.\nDo not share this code with anyone.\n\nIf you did not request this code, you can safely ignore this message.\n\nRegards,\nMediConnect`,
     meta: { kind: "OTP", purpose },
   });
+  // Log masked recipient and purpose only — never the OTP value.
+  console.log(`[otp] Verification email dispatched to ${maskedTo} for purpose: ${purpose}`);
+  return result;
 }
 
 export async function sendPasswordReset(to, link) {

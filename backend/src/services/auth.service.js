@@ -38,9 +38,10 @@ export async function persistRefresh(user, refreshToken) {
 }
 
 export async function loginWithPassword(req, res, { email, password }) {
-  const user = await User.findOne({ email: email.toLowerCase() });
+  const cleanEmail = String(email || "").trim().toLowerCase();
+  const user = await User.findOne({ email: cleanEmail });
   if (!user) {
-    await writeAudit(req, { action: "FAILED_LOGIN", resource: "User", metadata: { email } });
+    await writeAudit(req, { action: "FAILED_LOGIN", resource: "User", metadata: { email: cleanEmail } });
     throw new AppError("Email or password is incorrect.", 401, "INVALID_CREDENTIALS");
   }
   if (user.lockUntil && user.lockUntil > new Date()) {
@@ -75,21 +76,36 @@ export async function loginWithPassword(req, res, { email, password }) {
 }
 
 export async function requestOtp(email, purpose = "LOGIN") {
+  const cleanEmail = String(email || "").trim().toLowerCase();
   const code = generateOtp();
-  await OtpChallenge.updateMany({ email, purpose, consumed: false }, { consumed: true });
+  await OtpChallenge.updateMany({ email: cleanEmail, purpose, consumed: false }, { consumed: true });
   await OtpChallenge.create({
-    email,
+    email: cleanEmail,
     purpose,
     codeHash: sha256(code),
     expiresAt: new Date(Date.now() + env.otpMinutes * 60 * 1000),
   });
-  await sendOtpEmail(email, code, purpose);
+  try {
+    await sendOtpEmail(cleanEmail, code, purpose);
+  } catch (err) {
+    // Email delivery failed — invalidate the challenge so the user is not
+    // left with a valid OTP they can never receive.
+    await OtpChallenge.updateMany({ email: cleanEmail, purpose, consumed: false }, { consumed: true });
+    // Sanitised server-side log — no credentials or OTP value exposed.
+    console.error("[otp] Failed to deliver verification email:", err.code || err.message?.slice(0, 80));
+    throw new AppError(
+      "Unable to send the verification email. Please try again.",
+      502,
+      "EMAIL_DELIVERY_FAILED"
+    );
+  }
   return { sent: true };
 }
 
-export async function verifyOtp(email, code, purpose) {
+export async function verifyOtp(email, code, purpose = "LOGIN") {
+  const cleanEmail = String(email || "").trim().toLowerCase();
   const challenge = await OtpChallenge.findOne({
-    email: email.toLowerCase(),
+    email: cleanEmail,
     purpose,
     consumed: false,
     expiresAt: { $gt: new Date() },
@@ -111,8 +127,9 @@ export async function verifyOtp(email, code, purpose) {
 }
 
 export async function loginWithOtp(req, res, { email, code }) {
-  await verifyOtp(email.toLowerCase(), code, "LOGIN");
-  const user = await User.findOne({ email: email.toLowerCase() });
+  const cleanEmail = String(email || "").trim().toLowerCase();
+  await verifyOtp(cleanEmail, code, "LOGIN");
+  const user = await User.findOne({ email: cleanEmail });
   if (!user) throw new AppError("No provider account exists for this email.", 404, "NOT_FOUND");
   if (user.status === USER_STATUS.SUSPENDED || user.status === USER_STATUS.DEACTIVATED) {
     throw new AppError("This account is not permitted to sign in.", 403, "ACCOUNT_DISABLED");

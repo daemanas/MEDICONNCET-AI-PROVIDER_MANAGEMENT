@@ -3,6 +3,7 @@ import { connectDb } from "./config/db.js";
 import { initRedis, redisStatus } from "./config/redis.js";
 import { createApp } from "./app.js";
 import { startAiQueue } from "./services/ai.service.js";
+import { verifySMTPConnection } from "./services/email.service.js";
 
 const app = createApp();
 
@@ -14,6 +15,9 @@ connectDb()
     await initRedis().catch((err) => console.warn("[redis] init failed", err.message));
     const redis = redisStatus();
     console.log(`Redis ${redis.connected ? "connected" : `unavailable (${redis.error || "not configured"})`}`);
+
+    // Verify SMTP once at startup — diagnostic only, never blocks startup.
+    verifySMTPConnection();
 
     app.listen(env.port, () => {
       console.log(`MediConnect AI API listening on ${env.port}`);
