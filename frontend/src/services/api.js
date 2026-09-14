@@ -1,14 +1,14 @@
-// export const API_BASE_URL = (
-//   import.meta.env.VITE_API_BASE_URL ||
-//   import.meta.env.API_BASE_URL ||
-//   ""
-// ).replace(/\/+$/, "");
-
-// const API = API_BASE_URL;
-
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
+export const API_BASE_URL = (
+  import.meta.env.VITE_API_BASE_URL ||
+  import.meta.env.API_BASE_URL ||
+  ""
+).replace(/\/+$/, "");
 
 const API = API_BASE_URL;
+
+// export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
+
+// const API = API_BASE_URL;
 
 export const DATA_CHANGED = "mc:data-changed";
 const DATA_CHANNEL = "mc-data";
